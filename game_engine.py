@@ -12,6 +12,7 @@ class ResourceType(Enum):
     STONE = "Stein"
     SAND = "Sand"
     WATER = "Wasser"
+    CLAY = "Lehm"
     
     # Landwirtschaftliche Produkte    
     WHEAT = "Getreide"
@@ -32,8 +33,8 @@ class ResourceType(Enum):
     GOLD_ORE = "Golderz"
     COAL = "Kohle"
     COPPER_ORE = "Kupfererz"
-    SALT = "Salz"
     SILVER_ORE = "Silbererz"
+    SALT = "Salz"
 
     # Verarbeitete Baumaterialien
     PLANKS = "Bretter"
@@ -56,12 +57,12 @@ class ResourceType(Enum):
 
     #Militärprodukte
     SWORD = "Schwert"
-    IRON_ARMOR = "Eisen-Rüstung"
-    LEATHER_ARMOR = "Leder-Rüstung"
     BOW = "Bogen"
     ARROW = "Pfeil"
     SPEER = "Speer"
     SHIELD = "Schild"
+    IRON_ARMOR = "Eisenrüstung"
+    LETHER_ARMOR = "Leder-Rüstung"
 
     # Handel
     GOLD = "Gold"
@@ -69,6 +70,7 @@ class ResourceType(Enum):
 class BuildingType(Enum):
     # Grundversorgung
     WELL = "Brunnen"
+    PIT = "Grube"
 
     # Landwirtschaftliche Gebäude
     FARM = "Bauernhof"
