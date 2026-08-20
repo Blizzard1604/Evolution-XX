@@ -120,7 +120,9 @@ class BuildingType(Enum):
     WAREHOUSE = "Lagerhaus"
 
     # Wohnen
+    TENT = "Zelt"
     HOUSE = "Haus"
+    RESIDENCE = "Wohnhaus"
 
     # Bildung
     SCHOOL = "Schule"
