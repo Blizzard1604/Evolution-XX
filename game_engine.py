@@ -70,10 +70,11 @@ class ResourceType(Enum):
 class BuildingType(Enum):
     # Grundversorgung
     WELL = "Brunnen"
-    PIT = "Grube"
+    PIT = "Grube" # Sand und Lehm
 
     # Landwirtschaftliche Gebäude
     FARM = "Bauernhof"
+    HUNTERHUT = "Jagdhaus"
 
     # Tierhaltung
     PIG_FARM = "Schweinezucht"
@@ -155,6 +156,7 @@ class WorkerType(Enum):
     COOK = "Koch"
     BREEDER = "Züchter"
     FISHERMAN = "Fischer"
+    HUNTER = "Jäger"
 
     # Bergbau und Metallverarbeitung
     MINER = "Bergmann"
