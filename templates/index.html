@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 Evolution-XX - Siedler Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            color: white;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .breadcrumb button:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 50px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .welcome-screen h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .welcome-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* Game Screen */
+        .game-screen {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-header h2 {
+            font-size: 1.5em;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        .game-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .map-area {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .map-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .map-grid {
+            display: grid;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .map-cell {
+            aspect-ratio: 1;
+            border: 2px solid #999;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: white;
+        }
+
+        .map-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* World Map Styling */
+        .world-map {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .world-cell {
+            background: linear-gradient(135deg, #81c784 0%, #689f38 100%);
+            color: white;
+        }
+
+        /* Region Map Styling */
+        .region-map {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .region-cell {
+            background: linear-gradient(135deg, #64b5f6 0%, #1976d2 100%);
+            color: white;
+        }
+
+        /* Gebiet Terrain Styles */
+        .terrain-grassland { background: linear-gradient(135deg, #9CCC65 0%, #7CB342 100%) !important; color: black !important; }
+        .terrain-forest { background: linear-gradient(135deg, #81C784 0%, #558B2F 100%) !important; }
+        .terrain-mountain { background: linear-gradient(135deg, #9E9E9E 0%, #424242 100%) !important; }
+        .terrain-sand { background: linear-gradient(135deg, #FFE082 0%, #FDD835 100%) !important; color: black !important; }
+        .terrain-river { background: linear-gradient(135deg, #64B5F6 0%, #1976D2 100%) !important; }
+        .terrain-lake { background: linear-gradient(135deg, #5C9FD8 0%, #0D47A1 100%) !important; }
+        .terrain-swamp { background: linear-gradient(135deg, #6D4C41 0%, #4E342E 100%) !important; }
+        
+        /* World-Biom Terrain Styles */
+        .terrain-mountains { background: linear-gradient(135deg, #757575 0%, #212121 100%) !important; }
+        .terrain-forest { background: linear-gradient(135deg, #558B2F 0%, #33691E 100%) !important; }
+        .terrain-plains { background: linear-gradient(135deg, #FFD54F 0%, #FBC02D 100%) !important; color: black !important; }
+        .terrain-coast { background: linear-gradient(135deg, #FFB74D 0%, #FF9800 100%) !important; color: black !important; }
+        .terrain-sea { background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%) !important; }
+        .terrain-islands { background: linear-gradient(135deg, #FFD54F 0%, #5C9FD8 100%) !important; color: black !important; }
+        .terrain-swamp { background: linear-gradient(135deg, #6D4C41 0%, #4E342E 100%) !important; }
+        .terrain-desert { background: linear-gradient(135deg, #FFF59D 0%, #FBC02D 100%) !important; color: black !important; }
+        .terrain-river_delta { background: linear-gradient(135deg, #90CAF9 0%, #64B5F6 100%) !important; color: black !important; }
+
+        /* Gebiet Map Styling */
+        .gebiet-map {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .gebiet-cell {
+            background: #C8E6C9;
+            color: #333;
+            border: 2px solid #66BB6A;
+        }
+
+        .gebiet-cell[data-building] {
+            background: #FF9800 !important;
+            color: white;
+            font-size: 1.4em;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .resource {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .resource:last-child {
+            border-bottom: none;
+        }
+
+        .resource-name {
+            font-weight: 500;
+        }
+
+        .resource-amount {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .message.error {
+            background: #ffcdd2;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .message.info {
+            background: #bbdefb;
+            color: #1565c0;
+            border-left: 4px solid #2196F3;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .messages-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏰 EVOLUTION-XX 🏰</h1>
+            <p>Eine interaktive Siedler Simulation mit 3 Kartenbenen</p>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <h2>Willkommen in Evolution-XX!</h2>
+            <p>Erkunde die Weltkarte, verwalte Regionen, und baue in deinen Gebieten Gebäude!</p>
+            <button class="btn btn-primary" onclick="startGame()">🎮 Spiel Starten</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <!-- Breadcrumb Navigation -->
+            <div class="breadcrumb">
+                <button onclick="goToWorld()" id="breadcrumbWorld">🌍 Welt</button>
+                <span id="breadcrumbRegion" style="display:none;">
+                    → <button onclick="goToRegion()" id="regionBtn"></button>
+                </span>
+                <span id="breadcrumbGebiet" style="display:none;">
+                    → <button onclick="goToGebiet()" id="gebietBtn"></button>
+                </span>
+                <button class="btn-secondary" style="margin-left: auto; background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;" onclick="backToWelcome()">← Neue Partie</button>
+            </div>
+
+            <!-- Game Header -->
+            <div class="game-header">
+                <h2 id="pageTitle">Weltkarte</h2>
+                <div class="game-stats">
+                    <div class="stat">👥 <span id="population">10</span></div>
+                    <div class="stat">🌾 Turn <span id="turnCounter">0</span></div>
+                    <div class="stat">💰 <span id="treasury">100</span></div>
+                </div>
+            </div>
+
+            <!-- Game Content -->
+            <div class="game-content">
+                <div class="map-area">
+                    <div class="map-title" id="mapTitle">Weltkarte</div>
+                    <div class="map-grid world-map" id="gameMap"></div>
+                    <div class="info-text" id="mapInfo">Klicke auf eine Region um sie zu besuchen</div>
+                </div>
+
+                <div class="sidebar">
+                    <!-- Resources Panel -->
+                    <div class="panel">
+                        <h3>📦 Ressourcen</h3>
+                        <div id="resourcesPanel"></div>
+                    </div>
+
+                    <!-- Messages Panel -->
+                    <div class="panel">
+                        <h3>💬 Ereignisse</h3>
+                        <div class="messages-container" id="messagesPanel"></div>
+                    </div>
+
+                    <!-- Turn Button -->
+                    <button class="btn btn-primary" onclick="nextTurn()" style="margin-top: 20px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+                        ⏭️ Nächster Turn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TERRAIN_EMOJIS = {
+            PLAINS: "🌾",
+            FOREST: "🌲",
+            MOUNTAIN: "⛰️",
+            WATER: "💧",
+            SWAMP: "🌿",
+        };
+
+        let gameState = null;
+        let currentLevel = "world";
+        let currentRegionId = null;
+        let currentGebietId = null;
+
+        async function startGame() {
+            const response = await fetch('/api/game/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            gameState = await response.json();
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            
+            // Go to world map
+            await goToWorld();
+        }
+
+        async function goToWorld() {
+            const response = await fetch('/api/map/goto_world', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+            currentLevel = "world";
+            currentRegionId = null;
+            currentGebietId = null;
+            updateUI();
+        }
+
+        async function goToRegion(regionId) {
+            const response = await fetch('/api/map/goto_region', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ region_id: regionId })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                gameState = result.state;
+                currentLevel = "region";
+                currentRegionId = regionId;
+                currentGebietId = null;
+                updateUI();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        async function goToGebiet(gebietId) {
+            const response = await fetch('/api/map/goto_gebiet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gebiet_id: gebietId })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                gameState = result.state;
+                currentLevel = "gebiet";
+                currentGebietId = gebietId;
+                updateUI();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        function updateUI() {
+            updateStats();
+            updateBreadcrumb();
+            updateMap();
+            updateResources();
+        }
+
+        function updateStats() {
+            document.getElementById('population').textContent = gameState.population;
+            document.getElementById('turnCounter').textContent = gameState.turn;
+            document.getElementById('treasury').textContent = gameState.treasury;
+        }
+
+        function updateBreadcrumb() {
+            const mapData = gameState.map;
+            
+            if (mapData.level === "world") {
+                document.getElementById('breadcrumbRegion').style.display = 'none';
+                document.getElementById('breadcrumbGebiet').style.display = 'none';
+                document.getElementById('pageTitle').textContent = '🌍 Weltkarte';
+                document.getElementById('mapTitle').textContent = 'Regionen der Welt';
+                document.getElementById('mapInfo').textContent = 'Klicke auf eine Region um sie zu besuchen';
+            } else if (mapData.level === "region") {
+                document.getElementById('breadcrumbRegion').style.display = 'inline';
+                document.getElementById('breadcrumbGebiet').style.display = 'none';
+                document.getElementById('regionBtn').textContent = mapData.region_name;
+                document.getElementById('regionBtn').onclick = () => goToRegion(currentRegionId);
+                document.getElementById('pageTitle').textContent = `🏘️ ${mapData.region_name}`;
+                document.getElementById('mapTitle').textContent = `Gebiete: ${mapData.region_name}`;
+                document.getElementById('mapInfo').textContent = 'Klicke auf ein Gebiet um hineinzuzoomen';
+            } else if (mapData.level === "gebiet") {
+                document.getElementById('breadcrumbRegion').style.display = 'inline';
+                document.getElementById('breadcrumbGebiet').style.display = 'inline';
+                document.getElementById('regionBtn').textContent = mapData.region_name;
+                document.getElementById('regionBtn').onclick = () => goToRegion(currentRegionId);
+                document.getElementById('gebietBtn').textContent = mapData.gebiet_name;
+                document.getElementById('gebietBtn').onclick = () => goToGebiet(currentGebietId);
+                document.getElementById('pageTitle').textContent = `🏗️ ${mapData.gebiet_name}`;
+                document.getElementById('mapTitle').textContent = `Bauplätze: ${mapData.gebiet_name}`;
+                document.getElementById('mapInfo').textContent = 'Klicke auf einen Platz um ein Gebäude zu bauen';
+            }
+        }
+
+        function updateMap() {
+            const mapDiv = document.getElementById('gameMap');
+            const mapData = gameState.map;
+            
+            mapDiv.innerHTML = '';
+            mapDiv.className = 'map-grid';
+
+            if (mapData.level === "world") {
+                mapDiv.classList.add('world-map');
+                mapData.regionen.forEach(region => {
+                    const cell = document.createElement('div');
+                    cell.className = `map-cell world-cell terrain-${region.world_terrain.toLowerCase()}`;
+                    cell.textContent = region.emoji;
+                    cell.title = `${region.name}\nBiom: ${region.world_terrain_name}\n(${region.gebiete_count} Gebiete)`;
+                    cell.onclick = () => goToRegion(region.id);
+                    mapDiv.appendChild(cell);
+                });
+            } else if (mapData.level === "region") {
+                mapDiv.classList.add('region-map');
+                mapData.gebiete.forEach(gebiet => {
+                    const cell = document.createElement('div');
+                    cell.className = `map-cell region-cell terrain-${gebiet.terrain.toLowerCase()}`;
+                    cell.textContent = gebiet.emoji;
+                    cell.title = `${gebiet.name}\nTerrain: ${gebiet.terrain_name}`;
+                    cell.onclick = () => goToGebiet(gebiet.id);
+                    mapDiv.appendChild(cell);
+                });
+            } else if (mapData.level === "gebiet") {
+                mapDiv.classList.add('gebiet-map');
+                
+                // Create 5x5 grid for building placement
+                for (let y = 0; y < mapData.height; y++) {
+                    for (let x = 0; x < mapData.width; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'map-cell gebiet-cell';
+                        
+                        const building = mapData.buildings.find(b => b.x === x && b.y === y);
+                        if (building) {
+                            cell.setAttribute('data-building', building.type);
+                            cell.textContent = '🏢'; // Generic building
+                            cell.title = `${building.type}\n(${building.workers} Arbeiter)`;
+                        } else {
+                            cell.textContent = '.';
+                            cell.onclick = () => selectPlaceAndBuild(x, y);
+                        }
+                        
+                        mapDiv.appendChild(cell);
+                    }
+                }
+            }
+        }
+
+        function updateResources() {
+            const resourcesPanel = document.getElementById('resourcesPanel');
+            const resources = gameState.global_resources || {};
+            
+            resourcesPanel.innerHTML = Object.entries(resources)
+                .map(([res, amount]) => `
+                    <div class="resource">
+                        <span class="resource-name">${res}</span>
+                        <span class="resource-amount">${amount}</span>
+                    </div>
+                `).join('');
+        }
+
+        function selectPlaceAndBuild(x, y) {
+            if (currentLevel !== "gebiet") return;
+            
+            const buildingType = prompt("Gebäudetyp eingeben (z.B. FARM, LUMBERMILL, QUARRY):");
+            if (!buildingType) return;
+            
+            buildBuilding(buildingType.toUpperCase(), x, y);
+        }
+
+        async function buildBuilding(buildingType, x, y) {
+            const response = await fetch('/api/building/build', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: buildingType, x, y })
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+            showMessage(result.message, result.success ? 'success' : 'error');
+            updateUI();
+        }
+
+        async function nextTurn() {
+            const response = await fetch('/api/game/next', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+            
+            const turnResult = result.turn_result;
+            if (turnResult.fed) {
+                showMessage(`✅ Population versorgt`, 'success');
+            } else {
+                showMessage(`⚠️ Nicht genug Essen!`, 'error');
+            }
+            
+            updateUI();
+        }
+
+        function showMessage(msg, type = 'info') {
+            const container = document.getElementById('messagesPanel');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = msg;
+            container.insertBefore(messageDiv, container.firstChild);
+
+            if (container.children.length > 5) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function backToWelcome() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').style.display = 'block';
+            gameState = null;
+            currentLevel = "world";
+            currentRegionId = null;
+            currentGebietId = null;
+        }
+    </script>
+</body>
+</html>

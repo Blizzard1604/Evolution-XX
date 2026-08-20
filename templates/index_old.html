@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 Evolution-XX - Siedler Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 50px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .welcome-screen h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .welcome-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        /* Game Screen */
+        .game-screen {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-header h2 {
+            font-size: 1.5em;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        .game-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .map-section {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .game-map {
+            display: grid;
+            grid-template-columns: repeat(20, 30px);
+            gap: 2px;
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .game-map.small {
+            grid-template-columns: repeat(15, 25px);
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background: #c8e6c9;
+            border: 1px solid #999;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        .cell.small {
+            width: 25px;
+            height: 25px;
+        }
+
+        .cell:hover {
+            background: #a5d6a7;
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .cell[data-building] {
+            background: #ff9800;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .cell[data-building="WAREHOUSE"] { background: #9C27B0; }
+        .cell[data-building="LUMBERMILL"] { background: #8B4513; }
+        .cell[data-building="QUARRY"] { background: #795548; }
+        .cell[data-building="FARM"] { background: #33691E; }
+        .cell[data-building="MILL"] { background: #FF6F00; }
+        .cell[data-building="MINE"] { background: #424242; }
+        .cell[data-building="BLACKSMITH"] { background: #E32F2F; }
+        .cell[data-building="BARRACKS"] { background: #1A237E; }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .resource {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .resource:last-child {
+            border-bottom: none;
+        }
+
+        .resource-name {
+            font-weight: 500;
+        }
+
+        .resource-amount {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-group {
+            margin-top: 15px;
+        }
+
+        .action-group h4 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            background: #f0f0f0;
+            color: #333;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 60px;
+        }
+
+        .action-btn:hover {
+            background: #ddd;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .message.error {
+            background: #ffcdd2;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .message.info {
+            background: #bbdefb;
+            color: #1565c0;
+            border-left: 4px solid #2196F3;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-content h3 {
+            color: #333;
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .building-cost {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .cost-item {
+            display: inline-block;
+            margin-right: 15px;
+            padding: 3px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .turn-counter {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .workers-list {
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .worker-item {
+            padding: 8px;
+            background: #f5f5f5;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .worker-type {
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .next-turn-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .next-turn-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .messages-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏰 EVOLUTION-XX 🏰</h1>
+            <p>Eine interaktive Siedler Simulation</p>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <h2>Willkommen!</h2>
+            <p>Starte eine neue Siedlung und baue dein Reich auf! Verwalte Ressourcen, stelle Arbeiter ein und baue Gebäude.</p>
+            
+            <div class="form-group">
+                <label for="mapWidth">Kartengröße (Breite):</label>
+                <input type="number" id="mapWidth" value="20" min="10" max="30">
+            </div>
+            
+            <div class="form-group">
+                <label for="initialPop">Anfangspopulation:</label>
+                <input type="number" id="initialPop" value="10" min="5" max="50">
+            </div>
+            
+            <button class="btn btn-primary" onclick="startGame()">🎮 Spiel Starten</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-header">
+                <h2>🏰 Dein Reich</h2>
+                <div class="game-stats">
+                    <div class="stat">👥 <span id="population">10</span>/<span id="maxPop">50</span></div>
+                    <div class="stat">🌾 Turn <span class="turn-counter" id="turnCounter">0</span></div>
+                    <div class="stat">💰 <span id="treasury">100</span></div>
+                </div>
+                <button class="btn btn-secondary" onclick="backToWelcome()">← Neue Partie</button>
+            </div>
+
+            <div class="game-content">
+                <div class="map-section">
+                    <h3 style="margin-bottom: 15px;">🗺️ Karte</h3>
+                    <div class="game-map" id="gameMap"></div>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px; text-align: center;">Klicke auf eine Zelle zum Bauen</p>
+                </div>
+
+                <div class="sidebar">
+                    <!-- Resources Panel -->
+                    <div class="panel">
+                        <h3>📦 Ressourcen</h3>
+                        <div id="resourcesPanel"></div>
+                    </div>
+
+                    <!-- Messages Panel -->
+                    <div class="panel">
+                        <h3>💬 Ereignisse</h3>
+                        <div class="messages-container" id="messagesPanel"></div>
+                    </div>
+
+                    <!-- Buildings Panel -->
+                    <div class="panel">
+                        <h3>🏗️ Bauen</h3>
+                        <div class="action-buttons" id="buildingButtons"></div>
+                    </div>
+
+                    <!-- Workers Panel -->
+                    <div class="panel">
+                        <h3>👷 Arbeiter</h3>
+                        <div class="action-buttons" id="workerButtons"></div>
+                    </div>
+
+                    <button class="next-turn-btn" onclick="nextTurn()">⏭️ Nächster Turn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Building Modal -->
+    <div class="modal" id="buildingModal">
+        <div class="modal-content">
+            <h2 id="modalBuildingName">Gebäude bauen</h2>
+            <p id="modalBuildingDesc"></p>
+            <div id="modalBuildingCost" class="building-cost"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="cancelBuilding()">Abbrechen</button>
+                <button class="btn btn-primary" id="confirmBuildBtn">Bauen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Management Modal -->
+    <div class="modal" id="workerModal">
+        <div class="modal-content">
+            <h2>👷 Arbeiter verwalten</h2>
+            <div id="workerManagementContent"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeWorkerModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BUILDINGS = {
+            WAREHOUSE: { name: "Lagerhaus", emoji: "📦", desc: "Lagert Ressourcen" },
+            LUMBERMILL: { name: "Sägewerk", emoji: "🪵", desc: "Produziert Holz" },
+            QUARRY: { name: "Steinbruch", emoji: "⛏️", desc: "Produziert Stein" },
+            FARM: { name: "Bauernhof", emoji: "🌾", desc: "Produziert Getreide" },
+            MILL: { name: "Mühle", emoji: "⚙️", desc: "Verarbeitet Getreide zu Mehl" },
+            MINE: { name: "Mine", emoji: "⛰️", desc: "Produziert Eisenerz" },
+            BLACKSMITH: { name: "Schmiede", emoji: "🔨", desc: "Verarbeitet Eisenerz zu Eisen" },
+            BARRACKS: { name: "Kaserne", emoji: "🛡️", desc: "Militärgebäude" },
+        };
+
+        const WORKERS = {
+            LUMBERJACK: "Holzfäller 🪵",
+            STONEMASON: "Steinmetz ⛏️",
+            FARMER: "Bauer 🌾",
+            MILLER: "Müller ⚙️",
+            MINER: "Bergmann ⛰️",
+            SMITH: "Schmied 🔨",
+            SOLDIER: "Soldat 🛡️",
+        };
+
+        let gameState = null;
+        let selectedBuildingType = null;
+
+        async function startGame() {
+            const width = parseInt(document.getElementById('mapWidth').value);
+            const pop = parseInt(document.getElementById('initialPop').value);
+
+            const response = await fetch('/api/game/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ width: width, height: width, population: pop })
+            });
+
+            gameState = await response.json();
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            updateUI();
+        }
+
+        async function updateUI() {
+            if (!gameState) return;
+
+            // Update stats
+            document.getElementById('population').textContent = gameState.population;
+            document.getElementById('maxPop').textContent = gameState.max_population;
+            document.getElementById('turnCounter').textContent = gameState.turn;
+            document.getElementById('treasury').textContent = gameState.treasury;
+
+            // Update resources
+            const resourcesPanel = document.getElementById('resourcesPanel');
+            resourcesPanel.innerHTML = Object.entries(gameState.resources)
+                .map(([res, amount]) => `
+                    <div class="resource">
+                        <span class="resource-name">${res}</span>
+                        <span class="resource-amount">${amount}</span>
+                    </div>
+                `).join('');
+
+            // Update map
+            updateMap();
+
+            // Update building buttons
+            const buildingButtons = document.getElementById('buildingButtons');
+            buildingButtons.innerHTML = Object.entries(BUILDINGS)
+                .map(([type, info]) => `
+                    <button class="action-btn" onclick="selectBuilding('${type}')">
+                        ${info.emoji} ${info.name}
+                    </button>
+                `).join('');
+
+            // Update worker buttons
+            const workerButtons = document.getElementById('workerButtons');
+            workerButtons.innerHTML = `
+                <button class="action-btn" style="flex: 1;" onclick="openWorkerModal()">
+                    ➕ Arbeiter
+                </button>
+            `;
+        }
+
+        function updateMap() {
+            const mapDiv = document.getElementById('gameMap');
+            mapDiv.innerHTML = '';
+            const width = 20;
+
+            for (let y = 0; y < width; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => buildAtPosition(x, y);
+
+                    const building = gameState.buildings.find(b => b.x === x && b.y === y);
+                    if (building) {
+                        const buildInfo = BUILDINGS[building.type];
+                        cell.setAttribute('data-building', building.type);
+                        cell.textContent = buildInfo.emoji;
+                        cell.title = `${buildInfo.name} (${building.workers} Arbeiter)`;
+                    } else {
+                        cell.textContent = '.';
+                    }
+
+                    mapDiv.appendChild(cell);
+                }
+            }
+        }
+
+        function selectBuilding(type) {
+            selectedBuildingType = type;
+            const info = BUILDINGS[type];
+            document.getElementById('modalBuildingName').textContent = `${info.emoji} ${info.name}`;
+            document.getElementById('modalBuildingDesc').textContent = info.desc;
+
+            // Get costs
+            fetch(`/api/resources/costs?type=${type}`)
+                .then(r => r.json())
+                .then(costs => {
+                    const costHTML = Object.entries(costs)
+                        .map(([res, amount]) => `<span class="cost-item">${res}: ${amount}</span>`)
+                        .join('');
+                    document.getElementById('modalBuildingCost').innerHTML = costHTML || 'Kostenlos';
+                });
+
+            // Set up the confirm button
+            const confirmBtn = document.getElementById('confirmBuildBtn');
+            confirmBtn.textContent = `🏗️ ${info.name} bauen`;
+            confirmBtn.onclick = () => {
+                closeBuildingModal();
+                showMessage('Klicke auf eine Zelle auf der Karte zum Bauen!', 'info');
+            };
+
+            document.getElementById('buildingModal').classList.add('active');
+        }
+
+        function closeBuildingModal() {
+            document.getElementById('buildingModal').classList.remove('active');
+            // Don't reset selectedBuildingType here so user can place multiple buildings
+        }
+
+        function cancelBuilding() {
+            closeBuildingModal();
+            selectedBuildingType = null;
+        }
+
+        async function buildAtPosition(x, y) {
+            if (!selectedBuildingType) {
+                showMessage('Wähle zuerst ein Gebäude zum Bauen', 'info');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/building/build', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: selectedBuildingType, x, y })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                gameState = result.state;
+                showMessage(result.message, result.success ? 'success' : 'error');
+                
+                // Keep the selection for next building if successful
+                if (!result.success) {
+                    selectedBuildingType = null;
+                }
+                updateUI();
+            } catch (error) {
+                showMessage(`Fehler beim Bauen: ${error.message}`, 'error');
+                console.error('Build error:', error);
+            }
+        }
+
+        async function openWorkerModal() {
+            const content = document.getElementById('workerManagementContent');
+            content.innerHTML = `
+                <h3>Neuen Arbeiter einstellen:</h3>
+                <div class="action-buttons" style="flex-direction: column;">
+                    ${Object.entries(WORKERS).map(([type, name]) => `
+                        <button class="action-btn" style="width: 100%;" onclick="hireWorker('${type}')">
+                            ${name}
+                        </button>
+                    `).join('')}
+                </div>
+                <h3 style="margin-top: 20px;">Aktive Arbeiter (${gameState.workers.length}):</h3>
+                <div class="workers-list">
+                    ${gameState.workers.map(w => `
+                        <div class="worker-item">
+                            <span><span class="worker-type">${WORKERS[w.type]}</span></span>
+                            <button class="action-btn" style="width: 50px; margin: 0;" onclick="fireWorker(${w.id})">Entlassen</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('workerModal').classList.add('active');
+        }
+
+        function closeWorkerModal() {
+            document.getElementById('workerModal').classList.remove('active');
+        }
+
+        async function hireWorker(type) {
+            const response = await fetch('/api/worker/hire', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type })
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+            showMessage(result.message, result.success ? 'success' : 'error');
+            openWorkerModal();
+            updateUI();
+        }
+
+        async function fireWorker(workerId) {
+            const response = await fetch('/api/worker/fire', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ worker_id: workerId })
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+            showMessage(result.message, result.success ? 'success' : 'error');
+            openWorkerModal();
+            updateUI();
+        }
+
+        async function nextTurn() {
+            const response = await fetch('/api/game/next', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+            gameState = result.state;
+
+            const turnResult = result.turn_result;
+            if (turnResult.fed) {
+                showMessage(`✅ Population versorgt: ${turnResult.food_amount} Essen`, 'success');
+            } else {
+                showMessage(`⚠️ Nicht genug Essen! Nur ${turnResult.food_amount} vorhanden`, 'error');
+            }
+
+            updateUI();
+        }
+
+        function showMessage(msg, type = 'info') {
+            const container = document.getElementById('messagesPanel');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = msg;
+            container.insertBefore(messageDiv, container.firstChild);
+
+            if (container.children.length > 5) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function backToWelcome() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').style.display = 'block';
+            gameState = null;
+        }
+    </script>
+</body>
+</html>
