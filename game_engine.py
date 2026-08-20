@@ -117,6 +117,7 @@ class BuildingType(Enum):
     ARMORY = "Rüstungsschmiede"
 
     # Lagerung
+    HEADQUARTERS = "Hauptquartier"
     WAREHOUSE = "Lagerhaus"
 
     # Wohnen
